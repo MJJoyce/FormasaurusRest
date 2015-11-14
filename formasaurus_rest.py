@@ -1,5 +1,7 @@
 import json
 import os
+import subprocess
+import urllib
 
 from flask import Flask
 from formasaurus import FormExtractor
@@ -14,10 +16,20 @@ LEADER = "/tmp"
 def hello():
     return "Hello!"
 
-@app.route("/extract/<path:file_path>")
+@app.route("/extract/local/<path:file_path>")
 def extract_local_file_forms(file_path):
     full_path = os.path.join(LEADER, file_path)
     tree = lxml.html.parse(full_path)
+    forms = ex.extract_forms(tree)
+    forms = [
+        (lxml.etree.tostring(form[0]), form[1], tree.getpath(form[0]))
+        for form in forms
+    ]
+    return json.dumps(forms)
+
+@app.route("/extract/url/<path:url>")
+def extract_site_forms(url):
+    tree = lxml.html.parse(url)
     forms = ex.extract_forms(tree)
     forms = [
         (lxml.etree.tostring(form[0]), form[1], tree.getpath(form[0]))
